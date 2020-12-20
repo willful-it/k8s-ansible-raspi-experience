@@ -17,6 +17,7 @@ $ docker exec -it 997012faa239 sh
 ```
 
 ## Run Graphana
+
 ```
 docker run -d --name=grafana -p 3000:3000 grafana/grafana
 ```
@@ -29,6 +30,19 @@ List of important metrics:
 
 ## Execute playbook
 
+Single machine:
+
 ```
-ansible-playbook playbook.yml -l dca632266607 -i inventory --user=pi
+ansible-playbook playbook.yml -l dca632266607 -i inventory
 ```
+
+All machines:
+
+```
+ansible-playbook playbook.yml -i inventory
+```
+
+## Endpoints
+
+* Prometheus: http://localhost:9090
+* Graphana: http://localhost:3000
