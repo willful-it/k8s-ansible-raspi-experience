@@ -7,7 +7,7 @@ $ docker volume create prometheus_data
 # launch container
 $ docker run \
     -p 9090:9090 \
-    -v /home/renato/Projects/willful/gitrepo/k8s-ansible-raspi-experience/prom/phrometheus.yml:/etc/prometheus/prometheus.yml \
+    -v $PROM_CONFIG_LOCATION:/etc/prometheus/prometheus.yml \
     -v prometheus_data:/prometheus \
     prom/prometheus
 
