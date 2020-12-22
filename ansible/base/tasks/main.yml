@@ -1,9 +1,26 @@
-- name: Update and upgrade apt packages
+- name: Run the equivalent of "apt-get update"
   become: true
   apt:
-    upgrade: 'yes'
-    update_cache: 'yes'
-    cache_valid_time: 86400 #One day
+    update_cache: yes
+
+- name: Upgrade the OS (apt-get dist-upgrade)
+  become: true
+  apt:
+    upgrade: dist
+
+- name: Turn swap off
+  become: true
+  command: dphys-swapfile swapoff
+  ignore_errors: yes
+
+- name: Uninstall swap module
+  become: true
+  command: dphys-swapfile uninstall
+  ignore_errors: yes
+
+- name: Run apt purge dphys-swapfile
+  become: true
+  command: apt purge dphys-swapfile -y
 
 - name: Download Node exporter
   get_url:
