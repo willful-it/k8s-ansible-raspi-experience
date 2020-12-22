@@ -127,6 +127,8 @@ then
 fi
 
 umount_sdcard
+
+# Mount the image for boot disk
 echo "Mounting the sdcard boot disk"
 
 loop_base=$( losetup --partscan --find --show "${extracted_image}" )
@@ -140,6 +142,7 @@ then
     exit 7
 fi
 
+# WIFI configuration file
 cp -v "${wifi_file}" "${sdcard_mount}/wpa_supplicant.conf"
 if [ ! -e "${sdcard_mount}/wpa_supplicant.conf" ]
 then
@@ -147,6 +150,7 @@ then
     exit 8
 fi
 
+# Activate SSH
 touch "${sdcard_mount}/ssh"
 if [ ! -e "${sdcard_mount}/ssh" ]
 then
@@ -154,17 +158,19 @@ then
     exit 9
 fi
 
+# First boot script
 if [ -e "${first_boot}" ]
 then
   cp -v "${first_boot}" "${sdcard_mount}/firstboot.sh"
 else
   echo '#!/bin/bash' > "${sdcard_mount}/firstboot.sh"
-  echo "sed \"s/raspberrypi/\$( sed 's/://g' /sys/class/net/eth0/address )/g\" -i /etc/hostname /etc/hosts" >> "${sdcard_mount}/firstboot.sh"
+  echo "sed \"s/raspberrypi/worker-\$( sed 's/://g' /sys/class/net/eth0/address )/g\" -i /etc/hostname /etc/hosts" >> "${sdcard_mount}/firstboot.sh"
   echo '/sbin/shutdown -r 1 "reboot in one minute"' >> "${sdcard_mount}/firstboot.sh"
 fi
 
 umount_sdcard
 
+# Mount the image for root disk
 echo "Mounting the sdcard root disk"
 echo "Running: mount ${loop_base}p2 \"${sdcard_mount}\" "
 mount ${loop_base}p2 "${sdcard_mount}"
@@ -176,18 +182,25 @@ then
     exit 10
 fi
 
-echo "Change the passwords and sshd_config file"
+# Passwords
+echo "Change the passwords file"
 
 root_password="$( python3 -c "import crypt; print(crypt.crypt('${root_password_clear}', crypt.mksalt(crypt.METHOD_SHA512)))" )"
 pi_password="$( python3 -c "import crypt; print(crypt.crypt('${pi_password_clear}', crypt.mksalt(crypt.METHOD_SHA512)))" )"
 sed -e "s#^root:[^:]\+:#root:${root_password}:#" "${sdcard_mount}/etc/shadow" -e  "s#^pi:[^:]\+:#pi:${pi_password}:#" -i "${sdcard_mount}/etc/shadow"
 sed -e 's;^#PasswordAuthentication.*$;PasswordAuthentication no;g' -e 's;^PermitRootLogin .*$;PermitRootLogin no;g' -i "${sdcard_mount}/etc/ssh/sshd_config"
+
+# SSH
+echo "Change the sshd_config file"
 mkdir "${sdcard_mount}/home/pi/.ssh"
 chmod 0700 "${sdcard_mount}/home/pi/.ssh"
 chown 1000:1000 "${sdcard_mount}/home/pi/.ssh"
 cat ${public_key_file} >> "${sdcard_mount}/home/pi/.ssh/authorized_keys"
 chown 1000:1000 "${sdcard_mount}/home/pi/.ssh/authorized_keys"
 chmod 0600 "${sdcard_mount}/home/pi/.ssh/authorized_keys"
+
+# First boot
+echo "Setup firstboot.service"
 
 echo "[Unit]
 Description=FirstBoot
@@ -205,10 +218,22 @@ RemainAfterExit=no
 WantedBy=multi-user.target" > "${sdcard_mount}/lib/systemd/system/firstboot.service"
 
 cd "${sdcard_mount}/etc/systemd/system/multi-user.target.wants" && ln -s "/lib/systemd/system/firstboot.service" "./firstboot.service"
+
+# Cgroup settings
+echo "Changing Cgroup settings"
+echo "cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory" >>  "${sdcard_mount}/boot/cmndline.txt"
+
+echo "/boot/cmndline.txt contents are:"
+echo "---START"
+cat "${sdcard_mount}/boot/cmndline.txt"
+echo "---END"
+
+
 cd -
 
 umount_sdcard
 
+# Create new image
 new_name="${extracted_image%.*}-ssh-enabled.img"
 cp -v "${extracted_image}" "${new_name}"
 
