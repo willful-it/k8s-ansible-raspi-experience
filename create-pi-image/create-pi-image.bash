@@ -30,6 +30,16 @@
 
 # Change the settings in the file mentioned below.
 
+if [ $# -eq 0 ]
+then
+  host_name_prefix="worker"
+else
+  host_name_prefix="$1"
+fi
+echo "Host name prefix is $host_name_prefix"
+
+
+
 settings_file="fix-ssh-on-pi.ini"
 
 # You should not need to change anything beyond here.
@@ -164,7 +174,7 @@ then
   cp -v "${first_boot}" "${sdcard_mount}/firstboot.sh"
 else
   echo '#!/bin/bash' > "${sdcard_mount}/firstboot.sh"
-  echo "sed \"s/raspberrypi/worker-\$( sed 's/://g' /sys/class/net/eth0/address )/g\" -i /etc/hostname /etc/hosts" >> "${sdcard_mount}/firstboot.sh"
+  echo "sed \"s/raspberrypi/$host_name_prefix-\$( sed 's/://g' /sys/class/net/eth0/address )/g\" -i /etc/hostname /etc/hosts" >> "${sdcard_mount}/firstboot.sh"
   echo '/sbin/shutdown -r 1 "reboot in one minute"' >> "${sdcard_mount}/firstboot.sh"
 fi
 
