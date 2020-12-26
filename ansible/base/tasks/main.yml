@@ -114,3 +114,48 @@
           },
           "storage-driver": "overlay2"
         }
+
+- name: Enable routing
+  become: yes
+  lineinfile:
+    dest: /etc/sysctl.conf
+    regexp: '^#\s*net.ipv4.ip_forward=1.*$'
+    line: 'net.ipv4.ip_forward=1'
+
+- name: Reboot the machine
+  become: yes
+  reboot:
+
+- name: Ensure the default Apache port is 8080
+  lineinfile:
+    path: /etc/httpd/conf/httpd.conf
+    regexp: '^Listen '
+    insertafter: '^#Listen '
+    line: Listen 8080
+
+- name: Add Kubernetes repository
+  become: yes
+  lineinfile:
+    path: /etc/apt/sources.list.d/kubernetes.list
+    insertafter: EOF
+    create: yes
+    line: deb http://apt.kubernetes.io/ kubernetes-xenial main
+
+- name: Add kubernetes apt key
+  become: yes
+  apt_key:
+    url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    state: present 
+
+- name: Kubernetes apt-get update
+  become: true
+  apt:
+    update_cache: yes
+
+- name: Install required Kubernetes packages
+  become: true
+  apt:
+    pkg:
+      - kubeadm
+      - kubectl
+      - kubelet
