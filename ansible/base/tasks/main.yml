@@ -81,3 +81,22 @@
     enabled: yes
     state: started
 
+- name: Reboot the machine
+  become: yes
+  reboot:
+
+- name: Download docker installer
+  get_url:
+    url: https://get.docker.com
+    dest: /tmp/get-docker.sh
+
+- name: Install docker
+  become: yes
+  command: sh /tmp/get-docker.sh
+
+- name: Add current user to docker group
+  become: yes
+  user:
+    name: pi
+    groups: docker
+    append: yes
