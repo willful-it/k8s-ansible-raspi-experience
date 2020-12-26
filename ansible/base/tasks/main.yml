@@ -100,3 +100,17 @@
     name: pi
     groups: docker
     append: yes
+
+- name: Set Docker daemon options
+  become: yes
+  copy:
+      dest: /etc/docker/daemon.json
+      content: |
+        {
+          "exec-opts": ["native.cgroupdriver=systemd"],
+          "log-driver": "json-file",
+          "log-opts": {
+            "max-size": "100m"
+          },
+          "storage-driver": "overlay2"
+        }
