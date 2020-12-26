@@ -168,6 +168,17 @@ then
     exit 9
 fi
 
+# Cgroup settings
+echo "Changing Cgroup settings"
+{ echo -n 'cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory '; cat  "${sdcard_mount}/cmdline.txt"; } >  "${sdcard_mount}/cmdline.txt.new"
+rm "${sdcard_mount}/cmdline.txt"
+mv "${sdcard_mount}/cmdline.txt.new" "${sdcard_mount}/cmdline.txt"
+
+echo "${sdcard_mount}/cmdline.txt contents"
+echo "---START"
+cat "${sdcard_mount}/cmdline.txt"
+echo "---END"
+
 # First boot script
 if [ -e "${first_boot}" ]
 then
@@ -228,16 +239,6 @@ RemainAfterExit=no
 WantedBy=multi-user.target" > "${sdcard_mount}/lib/systemd/system/firstboot.service"
 
 cd "${sdcard_mount}/etc/systemd/system/multi-user.target.wants" && ln -s "/lib/systemd/system/firstboot.service" "./firstboot.service"
-
-# Cgroup settings
-echo "Changing Cgroup settings"
-echo "cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory" >>  "${sdcard_mount}/boot/cmndline.txt"
-
-echo "/boot/cmndline.txt contents are:"
-echo "---START"
-cat "${sdcard_mount}/boot/cmndline.txt"
-echo "---END"
-
 
 cd -
 

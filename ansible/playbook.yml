@@ -3,3 +3,8 @@
   gather_facts: yes
   roles:
     - base
+- hosts: k8s_masters
+  gather_facts: yes
+  roles:
+    - k8s_master
+

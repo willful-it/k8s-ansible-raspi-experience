@@ -28,6 +28,12 @@ List of important metrics:
 
 * node_thermal_zone_temp
 
+## Generate kubadm token:
+
+```
+export KUBEADM_INIT_TOKEN=`python3 tools/generate_k8s_token.py`
+```
+
 ## Execute playbook
 
 Single machine:
@@ -40,6 +46,12 @@ All machines:
 
 ```
 ansible-playbook playbook.yml -i inventory
+```
+
+All machines but starting from a specific tastk:
+
+```
+ansible-playbook playbook.yml -i inventory --start-at-task="task name"
 ```
 
 ## Endpoints

@@ -1,0 +1,26 @@
+#- name: Create Kubernetes token
+#  become: true
+#  command: kubeadm token create {{ lookup('env', 'KUBEADM_INIT_TOKEN') }}
+
+- name: Initialize Kubernetes
+  become: true
+  command: kubeadm init --pod-network-cidr=10.244.0.0/16 --token {{ lookup('env', 'KUBEADM_INIT_TOKEN') }}
+
+- name: Creates /home/pi/.kube directory
+  file:
+    path: /home/pi/.kube
+    state: directory
+
+- name: Copy Kubernetes admin.conf to local kube config folder
+  become: true
+  command: cp /etc/kubernetes/admin.conf /home/pi/.kube/config
+
+- name: Change .kube folder permissions
+  become: true
+  file:
+    path: /home/pi/.kube/config
+    owner: pi
+    group: pi
+
+# kubeadm join 192.168.1.126:6443 --token 9hxg6b.r5vy4fzscphajg6a \
+#    --discovery-token-ca-cert-hash sha256:5e7ec09031c51014486fa2842bfdbe634930022e0d42ce6457c01dfdc5aa0141 

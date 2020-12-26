@@ -126,13 +126,6 @@
   become: yes
   reboot:
 
-- name: Ensure the default Apache port is 8080
-  lineinfile:
-    path: /etc/httpd/conf/httpd.conf
-    regexp: '^Listen '
-    insertafter: '^#Listen '
-    line: Listen 8080
-
 - name: Add Kubernetes repository
   become: yes
   lineinfile:
