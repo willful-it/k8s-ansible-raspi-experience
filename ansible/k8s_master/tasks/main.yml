@@ -23,5 +23,4 @@
     group: pi
 
 - name: Install flannel network driver
-  become: true
   command: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
