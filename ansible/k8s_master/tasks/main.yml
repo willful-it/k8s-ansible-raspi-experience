@@ -22,5 +22,6 @@
     owner: pi
     group: pi
 
-# kubeadm join 192.168.1.126:6443 --token 9hxg6b.r5vy4fzscphajg6a \
-#    --discovery-token-ca-cert-hash sha256:5e7ec09031c51014486fa2842bfdbe634930022e0d42ce6457c01dfdc5aa0141 
+- name: Install flannel network driver
+  become: true
+  command: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml

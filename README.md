@@ -31,7 +31,14 @@ List of important metrics:
 ## Generate kubadm token:
 
 ```
+source .venv/bin/activate && \
 export KUBEADM_INIT_TOKEN=`python3 tools/generate_k8s_token.py`
+```
+
+## Export kubernetes master hostname
+
+```
+export KUBEADM_MASTER_HOST=master-dca6322666c6
 ```
 
 ## Execute playbook

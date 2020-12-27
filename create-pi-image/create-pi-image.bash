@@ -1,4 +1,4 @@
-
+#!/bin/bash
 # Based on the work by Ken Fallon http://kenfallon.com
 
 if [ $# -eq 0 ]
@@ -7,14 +7,10 @@ then
 else
   host_name_prefix="$1"
 fi
-echo "Host name prefix is $host_name_prefix"
-
-
+echo "host name prefix is \"$host_name_prefix\""
 
 settings_file="fix-ssh-on-pi.ini"
-
-# You should not need to change anything beyond here.
-
+echo "settings file is \"$settings_file\""
 if [ -e "${settings_file}" ]
 then
   source "${settings_file}"
@@ -216,7 +212,7 @@ cd -
 umount_sdcard
 
 # Create new image
-new_name="${extracted_image%.*}-ssh-enabled.img"
+new_name="${extracted_image%.*}-ssh-enabled-${host_name_prefix}.img"
 cp -v "${extracted_image}" "${new_name}"
 
 losetup --detach ${loop_base}
