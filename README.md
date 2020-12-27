@@ -65,3 +65,9 @@ ansible-playbook playbook.yml -i inventory --start-at-task="task name"
 
 * Prometheus: http://localhost:9090
 * Graphana: http://localhost:3000
+
+## Check Raspberry Pi temperature
+
+```
+/opt/vc/bin/vcgencmd measure_temp
+```
