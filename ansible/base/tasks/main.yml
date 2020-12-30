@@ -84,6 +84,7 @@
 - name: Reboot the machine
   become: yes
   reboot:
+    msg: "Rebooting raspi"
 
 - name: Download docker installer
   get_url:
@@ -98,7 +99,8 @@
   become: yes
   user:
     name: pi
-    groups: docker
+    groups:
+      - docker
     append: yes
 
 - name: Set Docker daemon options
@@ -125,6 +127,7 @@
 - name: Reboot the machine
   become: yes
   reboot:
+    msg: "Rebooting raspi"
 
 - name: Add Kubernetes repository
   become: yes
