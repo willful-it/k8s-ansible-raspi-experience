@@ -1,4 +1,5 @@
 from crypt import METHOD_SHA512, crypt, mksalt
+from pathlib import Path
 
 import nmap3
 from colorama import Back, Fore, Style
@@ -8,7 +9,7 @@ from invoke import task
 import persistence as db
 
 
-def _sudo(c, cmd: str, msg: str, show_command=True) -> str:
+def _sudo(c, cmd: str, msg: str, show_command=False) -> str:
     cmd_to_show = "" if not show_command else "=> " + cmd
     print(Fore.BLUE, ".", msg, Style.RESET_ALL + cmd_to_show)
     return c.sudo(cmd, hide=True).stdout.strip()
@@ -53,19 +54,38 @@ def prepare_image(c,
                   output_image_path,
                   mount_path="/mnt/sdcard",
                   ssh_public_key_file="~/.ssh/id_ed25519_pi.pub",
-                  root_password_clear="1234567890",
                   user="ubuntu",
+                  root_password_clear="1234567890",
                   user_password_clear="1234567890"):
     """Prepares an image to be installed in the raspberry pi"""
 
     print(f"processing {image_path}")
 
     #
+    # generating new image
+    #
+    _print_title("generating the new image")
+    _sudo(
+        c,
+        f"rm -f {output_image_path}",
+        "delete previouslly generate image")
+
+    _sudo(
+        c,
+        f"cp -v {image_path} {output_image_path}",
+        "creating the new image")
+
+    _sudo(
+        c,
+        f"chmod 777 {output_image_path}",
+        "changing permissions of the new image")
+
+    #
     # starting...
     #
     _print_title("starting")
     loop_base = _sudo(
-        c, f"losetup --partscan --find --show {image_path}",
+        c, f"losetup --partscan --find --show {output_image_path}",
         "get image device")
 
     #
@@ -75,95 +95,39 @@ def prepare_image(c,
     try:
         _sudo(c, f"mount {loop_base}p1 {mount_path}", "mounting the boot disk")
         _sudo(c, f"touch '{mount_path}/ssh'", "activating ssh")
+
+        user_password = crypt(user_password_clear, mksalt(METHOD_SHA512))
+        root_password = crypt(root_password_clear, mksalt(METHOD_SHA512))
+
+        with open(Path(ssh_public_key_file).expanduser(), 'r') as ssh_file:
+            ssh_public_key_content = ssh_file.read()
+
+        with open('user-data-template', 'r') as userdata_file:
+            template = userdata_file.read()
+            content = template.replace("<user>", user)
+            content = content.replace("<user_password>", user_password)
+            content = content.replace("<root_password>", root_password)
+            content = content.replace(
+                "<ssh_public_key>", ssh_public_key_content)
+
+            with open('.new-user-data', 'w') as new_userdata_file:
+                new_userdata_file.write(content)
+
+        _sudo(
+            c,
+            f"cp .new-user-data {mount_path}/user-data",
+            "customizing user-data")
+
+        # _sudo(
+        #     c,
+        #     "rm .new-user-data",
+        #     "remove temporary user-data file")
+
     except Exception as e:
         _sudo(c, f"losetup -d {loop_base}", "detaching devices")
         raise e
     finally:
         _sudo(c, f"umount {loop_base}p1", "unmounting the boot disk")
-
-    #
-    # handling root disk
-    #
-    _print_title("handling root disk")
-    try:
-        _sudo(c, f"mount {loop_base}p2 {mount_path}", "mounting the root disk")
-
-        root_password = crypt(root_password_clear, mksalt(METHOD_SHA512))
-        user_password = crypt(user_password_clear, mksalt(METHOD_SHA512))
-
-        _sudo(
-            c,
-            f"sed -e 's#^root:[^:]\\+:#root:${root_password}:#' "
-            f"{mount_path}/etc/shadow -i {mount_path}/etc/shadow",
-            "setting root password")
-
-        root_line = _sudo(
-            c,
-            f"sed -n '/root/ p' {mount_path}/etc/shadow",
-            "copying root password line")
-
-        user_line = root_line.replace("root", user)
-        _sudo(
-            c,
-            f"sed '$a{user_line}' -i {mount_path}/etc/shadow",
-            "adding user to passwords file")
-
-        _sudo(
-            c,
-            f"sed -e 's#^{user}:[^:]\\+:#{user}:{user_password}:#' "
-            f"{mount_path}/etc/shadow -i '{mount_path}/etc/shadow'",
-            "setting user password")
-
-        _sudo(
-            c,
-            "sed -e 's;^#PasswordAuthentication.*$;"
-            "PasswordAuthentication no;g' "
-            "-e 's;^PermitRootLogin .*$;PermitRootLogin no;g' "
-            f"-i '{mount_path}/etc/ssh/sshd_config'",
-            "prevent ssh with password authentication")
-
-        _sudo(
-            c,
-            f"mkdir -p {mount_path}/home/{user}/.ssh",
-            "create .ssh directory")
-
-        _sudo(
-            c,
-            f"chmod 0700 {mount_path}/home/{user}/.ssh",
-            "change .ssh directory permissions")
-
-        _sudo(
-            c,
-            f"chown 1000:1000 {mount_path}/home/{user}/.ssh",
-            "change .ssh directory ownership")
-
-        _sudo(
-            c,
-            f"cat {ssh_public_key_file} > "
-            f"{mount_path}/home/{user}/.ssh/authorized_keys",
-            "create authorized_keys file with the ssh public key")
-
-        _sudo(
-            c,
-            f"chmod 0600 {mount_path}/home/{user}/.ssh/authorized_keys",
-            "change authorized_keys file permission")
-
-        _sudo(
-            c,
-            f"chown 1000:1000 {mount_path}/home/{user}/.ssh/authorized_keys",
-            "change authorized_keys file ownership")
-
-    finally:
-        _sudo(c, f"umount {loop_base}p2", "unmounting the boot disk")
-
-    #
-    # generating new image
-    #
-    _print_title("generating the new image")
-    _sudo(
-        c,
-        f"cp -v {image_path} {output_image_path}",
-        "creating the new image")
 
     #
     # finishing
