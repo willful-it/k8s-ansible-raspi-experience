@@ -12,11 +12,11 @@
 
 # On first boot, set the (default) ubuntu user's password to "ubuntu" and
 # expire user passwords
-chpasswd:
-  expire: false
-  list:
-    - <user>:<user_password>
-    - root:<root_password>
+#chpasswd:
+#  expire: false
+#  list:
+#    - <user>:<user_password>
+#    - root:<root_password>
 
 # Enable password authentication with the SSH daemon
 ssh_pwauth: false
@@ -37,8 +37,8 @@ users:
     lock_passwd: false
     primary_group: <user>
     groups: sudo
-    shell: bash
-    #passwd: <user_password>
+    shell: /bin/bash
+    passwd: <user_password>
     ssh_authorized_keys:
       - <ssh_public_key>
 #  groups: users
