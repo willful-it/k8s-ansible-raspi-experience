@@ -56,7 +56,8 @@ def prepare_image(c,
                   ssh_public_key_file="~/.ssh/id_ed25519_pi.pub",
                   user="ubuntu",
                   root_password_clear="1234567890",
-                  user_password_clear="1234567890"):
+                  user_password_clear="1234567890",
+                  role="worker"):
     """Prepares an image to be installed in the raspberry pi"""
 
     print(f"processing {image_path}")
@@ -109,6 +110,7 @@ def prepare_image(c,
             content = content.replace("<root_password>", root_password)
             content = content.replace(
                 "<ssh_public_key>", ssh_public_key_content)
+            content = content.replace("<raspi_role>", role)
 
             with open('.new-user-data', 'w') as new_userdata_file:
                 new_userdata_file.write(content)
