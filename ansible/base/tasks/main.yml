@@ -8,150 +8,110 @@
   apt:
     upgrade: dist
 
-- name: Turn swap off
-  become: true
-  command: dphys-swapfile swapoff
-  ignore_errors: yes
+# - name: Download Node exporter
+#   get_url:
+#     url: https://github.com/prometheus/node_exporter/releases/download/v1.0.1/node_exporter-1.0.1.linux-armv7.tar.gz
+#     dest: /tmp
+#     checksum: sha256:e7f4427a25f1870103588e4968c7dc8c1426c00a0c029d0183a9a7afdd61357b
 
-- name: Uninstall swap module
-  become: true
-  command: dphys-swapfile uninstall
-  ignore_errors: yes
+# - name: Create Node exporter folder in opt
+#   become: yes
+#   file:
+#     path: /usr/bin/nodeexporter
+#     state: directory
+#     mode: '0777'
 
-- name: Run apt purge dphys-swapfile
-  become: true
-  command: apt purge dphys-swapfile -y
+# - name: Extract Node exporter
+#   become: yes
+#   unarchive:
+#      src: /tmp/node_exporter-1.0.1.linux-armv7.tar.gz
+#      dest: /usr/bin/nodeexporter
+#      remote_src: yes
 
-- name: Download Node exporter
-  get_url:
-    url: https://github.com/prometheus/node_exporter/releases/download/v1.0.1/node_exporter-1.0.1.linux-armv7.tar.gz
-    dest: /tmp
-    checksum: sha256:e7f4427a25f1870103588e4968c7dc8c1426c00a0c029d0183a9a7afdd61357b
+# - name: Create Node exporter Service File
+#   become: yes
+#   file:
+#       path: /etc/systemd/system/nodeexporter.service
+#       state: touch
 
-- name: Create Node exporter folder in opt
-  become: yes
-  file:
-    path: /usr/bin/nodeexporter
-    state: directory
-    mode: '0777'
+# - name: Edit Node exporter Service File
+#   become: yes
+#   copy:
+#       dest: /etc/systemd/system/nodeexporter.service
+#       content: |
+#         [Unit]
+#         Description=Node Exporter
+#         Documentation=https://prometheus.io/
+#         After=network-online.target
 
-- name: Extract Node exporter
-  become: yes
-  unarchive:
-     src: /tmp/node_exporter-1.0.1.linux-armv7.tar.gz
-     dest: /usr/bin/nodeexporter
-     remote_src: yes
+#         [Service]
+#         User=pi
+#         Restart=on-failure
 
-- name: Create Node exporter Service File
-  become: yes
-  file:
-      path: /etc/systemd/system/nodeexporter.service
-      state: touch
+#         [Service]
+#         User=pi
+#         ExecStart=/usr/bin/nodeexporter/node_exporter-1.0.1.linux-armv7/node_exporter
 
-- name: Edit Node exporter Service File
-  become: yes
-  copy:
-      dest: /etc/systemd/system/nodeexporter.service
-      content: |
-        [Unit]
-        Description=Node Exporter
-        Documentation=https://prometheus.io/
-        After=network-online.target
+#         [Install]
+#         WantedBy=multi-user.target
 
-        [Service]
-        User=pi
-        Restart=on-failure
+# - name: systemd reload
+#   become: yes
+#   systemd:
+#     daemon_reload: yes
 
-        [Service]
-        User=pi
-        ExecStart=/usr/bin/nodeexporter/node_exporter-1.0.1.linux-armv7/node_exporter
+# - name: Start Node exporter service
+#   become: yes
+#   service:
+#     name: nodeexporter
+#     enabled: yes
+#     state: started
 
-        [Install]
-        WantedBy=multi-user.target
+# - name: Reboot the machine
+#   become: yes
+#   reboot:
+#     msg: "Rebooting raspi"
 
-- name: systemd reload
-  become: yes
-  systemd:
-    daemon_reload: yes
+# - name: Download docker installer
+#   get_url:
+#     url: https://get.docker.com
+#     dest: /tmp/get-docker.sh
 
-- name: Start Node exporter service
-  become: yes
-  service:
-    name: nodeexporter
-    enabled: yes
-    state: started
+# - name: Install docker
+#   become: yes
+#   command: sh /tmp/get-docker.sh
 
-- name: Reboot the machine
-  become: yes
-  reboot:
-    msg: "Rebooting raspi"
+# - name: Add current user to docker group
+#   become: yes
+#   user:
+#     name: pi
+#     groups:
+#       - docker
+#     append: yes
 
-- name: Download docker installer
-  get_url:
-    url: https://get.docker.com
-    dest: /tmp/get-docker.sh
+# - name: Set Docker daemon options
+#   become: yes
+#   copy:
+#       dest: /etc/docker/daemon.json
+#       content: |
+#         {
+#           "exec-opts": ["native.cgroupdriver=systemd"],
+#           "log-driver": "json-file",
+#           "log-opts": {
+#             "max-size": "100m"
+#           },
+#           "storage-driver": "overlay2"
+#         }
 
-- name: Install docker
-  become: yes
-  command: sh /tmp/get-docker.sh
+# - name: Enable routing
+#   become: yes
+#   lineinfile:
+#     dest: /etc/sysctl.conf
+#     regexp: '^#\s*net.ipv4.ip_forward=1.*$'
+#     line: 'net.ipv4.ip_forward=1'
 
-- name: Add current user to docker group
-  become: yes
-  user:
-    name: pi
-    groups:
-      - docker
-    append: yes
+# - name: Reboot the machine
+#   become: yes
+#   reboot:
+#     msg: "Rebooting raspi"
 
-- name: Set Docker daemon options
-  become: yes
-  copy:
-      dest: /etc/docker/daemon.json
-      content: |
-        {
-          "exec-opts": ["native.cgroupdriver=systemd"],
-          "log-driver": "json-file",
-          "log-opts": {
-            "max-size": "100m"
-          },
-          "storage-driver": "overlay2"
-        }
-
-- name: Enable routing
-  become: yes
-  lineinfile:
-    dest: /etc/sysctl.conf
-    regexp: '^#\s*net.ipv4.ip_forward=1.*$'
-    line: 'net.ipv4.ip_forward=1'
-
-- name: Reboot the machine
-  become: yes
-  reboot:
-    msg: "Rebooting raspi"
-
-- name: Add Kubernetes repository
-  become: yes
-  lineinfile:
-    path: /etc/apt/sources.list.d/kubernetes.list
-    insertafter: EOF
-    create: yes
-    line: deb http://apt.kubernetes.io/ kubernetes-xenial main
-
-- name: Add kubernetes apt key
-  become: yes
-  apt_key:
-    url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
-    state: present 
-
-- name: Kubernetes apt-get update
-  become: true
-  apt:
-    update_cache: yes
-
-- name: Install required Kubernetes packages
-  become: true
-  apt:
-    pkg:
-      - kubeadm
-      - kubectl
-      - kubelet

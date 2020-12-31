@@ -1,3 +1,0 @@
-- name: Join kubernetes cluster
-  become: true
-  command: kubeadm join {{ lookup('env', 'KUBEADM_MASTER_HOST') }}:6443 --token {{ lookup('env', 'KUBEADM_INIT_TOKEN') }} --discovery-token-unsafe-skip-ca-verification
