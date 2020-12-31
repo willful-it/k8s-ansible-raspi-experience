@@ -29,22 +29,24 @@ def find_raspis(c):
 
     for k in map.keys():
         if k in ("stats", "runtime"):
-            print(f"ignoring {k}")
+            print(f"ignoring {k} section")
             continue
 
         hostname = map[k]['hostname'][0]['name']
-        if "ubuntu" not in hostname and "raspberrypi" not in hostname:
-            print(f"ignoring {hostname}")
+        if "ubuntu" not in hostname and \
+                "raspberrypi" not in hostname and \
+                "workder" not in hostname and \
+                "master" not in hostname:
+            print(f"ignoring {k}|{hostname}")
             continue
 
         mac = get_mac_address(ip=k)
-        print(f"handling {k} {mac} {hostname}")
-
         host = db.get_host_by_mac(mac)
         if host:
-            print("host found in the inventory - ignoring")
+            print(f"ignoring {k}|{hostname} - host already in inventory")
             continue
 
+        print(f"saving {k}|{hostname}|{mac}")
         host = db.save_host(ip=k, mac=mac, hostname=hostname)
 
 
