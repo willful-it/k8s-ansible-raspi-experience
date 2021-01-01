@@ -76,6 +76,13 @@ Edit vault
 ansible-vault edit ~/.ansible/vault.yml
 ```
 
+## Ansible plugin
+
+```
+ansible-galaxy collection install community.general
+```
+
+
 ## Endpoints
 
 * Prometheus: http://localhost:9090
