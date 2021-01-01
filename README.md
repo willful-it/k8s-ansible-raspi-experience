@@ -43,22 +43,37 @@ export KUBEADM_MASTER_HOST=master-dca6322666c6
 
 ## Execute playbook
 
-Single machine:
-
-```
-ansible-playbook playbook.yml -l dca632266607 -i inventory
-```
 
 All machines:
 
 ```
-ansible-playbook playbook.yml -i inventory
+ansible-playbook playbook.yml -i inventory -e@~/.ansible/vault.yml --ask-vault-pass
 ```
+
+
+Single machine:
+
+```
+ansible-playbook playbook.yml -l dca632266607 ... (all other parameters)
+```
+
 
 All machines but starting from a specific tastk:
 
 ```
-ansible-playbook playbook.yml -i inventory --start-at-task="task name"
+ansible-playbook playbook.yml --start-at-task="task name" ... (all other parameters)
+```
+
+## Manage Ansible vault
+
+Create vault
+```
+ansible-vault create ~/.ansible/vault.yml
+```
+
+Edit vault
+```
+ansible-vault edit ~/.ansible/vault.yml
 ```
 
 ## Endpoints
