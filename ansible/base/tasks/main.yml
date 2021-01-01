@@ -3,65 +3,16 @@
   apt:
     update_cache: yes
 
-- name: Upgrade the OS (apt-get dist-upgrade)
+- name: Enable cgroups
   become: true
-  apt:
-    upgrade: dist
+  command:
+    cmd: sed -i '${s/$/ cgroup_enable=cpuset cgroup_enable=memory cgroup_memory=1/}' /boot/firmware/cmdline.txt
+    warn: false
 
-- name: Enable c-groups
-  become: true
-  copy:
-    dest: "/boot/firmware/cmdline.txt"
-    content: |
-      cgroup_enable=memory cgroup_memory=1 net.ifnames=0 dwc_otg.lpm_enable=0 console=serial0,115200 console=tty1 root=LABEL=writable rootfstype=ext4 elevator=deadline rootwait fixrtc
-
-- name: Reboot the machine after cgroup enablement
+- name: Reboot the machine after cgroups enablement
   become: yes
   reboot:
-    msg: "Ansible: rebooting after cgroup enablement"
-
-- name: Download docker installer
-  get_url:
-    url: https://get.docker.com
-    dest: /tmp/get-docker.sh
-
-- name: Install docker
-  become: yes
-  command: sh /tmp/get-docker.sh
-
-- name: Add ubuntu user to docker group
-  become: yes
-  user:
-    name: ubuntu
-    groups:
-      - docker
-    append: yes
-
-- name: Set Docker daemon options
-  become: yes
-  copy:
-    dest: /etc/docker/daemon.json
-    content: |
-      {
-        "exec-opts": ["native.cgroupdriver=systemd"],
-        "log-driver": "json-file",
-        "log-opts": {
-          "max-size": "100m"
-        },
-        "storage-driver": "overlay2"
-      }
-
-- name: Enable routing
-  become: yes
-  lineinfile:
-    dest: /etc/sysctl.conf
-    regexp: '^#\s*net.ipv4.ip_forward=1.*$'
-    line: "net.ipv4.ip_forward=1"
-
-- name: Reboot the machine after docker installation
-  become: yes
-  reboot:
-    msg: "Ansible: Rebooting raspi after docker installation"
+    msg: "Ansible: rebooting after cgroups enablement"
 
 - name: Install microk8s
   become: yes
@@ -69,10 +20,10 @@
     name: microk8s
     classic: yes
 
-- name: Add ubuntu user to microk8s group
-  become: yes
-  user:
-    name: ubuntu
-    groups:
-      - microk8s
-    append: yes
+- name: Waiting for microk8s to be ready
+  become: true
+  command: sh -xc "export LC_ALL=C.UTF-8 && microk8s.status --wait-ready"
+
+- name: Enable microk8s DNS and storage
+  become: true
+  command: sh -xc "export LC_ALL=C.UTF-8 && microk8s.enable dns storage"

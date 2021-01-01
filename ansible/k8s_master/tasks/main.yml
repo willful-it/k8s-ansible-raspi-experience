@@ -1,0 +1,4 @@
+- name: Kubernetes add batch of nodes
+  become: true
+  command: microk8s.add-node --token {{ item }} --token-ttl -1
+  with_items: "{{ microk8s_tokens }}"

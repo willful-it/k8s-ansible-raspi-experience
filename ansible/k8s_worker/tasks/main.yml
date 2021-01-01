@@ -1,0 +1,3 @@
+- name: Join Kubernetes cluster
+  become: true
+  command: microk8s.join {{ lookup('env', 'KUBEADM_MASTER_HOST') }}:25000/{{ lookup('env', 'KUBEADM_INIT_TOKEN') }}
