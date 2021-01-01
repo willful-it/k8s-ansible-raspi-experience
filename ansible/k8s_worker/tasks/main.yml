@@ -1,3 +1,7 @@
 - name: Join Kubernetes cluster
   become: true
-  command: microk8s.join {{ lookup('env', 'KUBEADM_MASTER_HOST') }}:25000/{{ lookup('env', 'KUBEADM_INIT_TOKEN') }}
+  command: microk8s.join {{ lookup('env', 'KUBEADM_MASTER_HOST') }}:25000/{{ q('lines', 'cat .add-node-tokens-raw.yml') | first}}
+
+- name: Waiting for microk8s to be ready
+  become: true
+  command: sh -xc "export LC_ALL=C.UTF-8 && microk8s.status --wait-ready"

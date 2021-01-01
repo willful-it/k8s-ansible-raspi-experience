@@ -1,7 +1,7 @@
 python3-nmap
 getmac
 invoke
-pony
+peewee
 colorama
 pylint
 flake8

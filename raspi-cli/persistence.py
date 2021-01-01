@@ -1,24 +1,32 @@
-from pony.orm import Database, Required, commit, db_session
-from pony.orm.core import Optional
+import os
+from pathlib import Path
 
-db = Database()
+import peewee
 
 
-class Host(db.Entity):
-    ip = Required(str, unique=True)
-    mac = Required(str, unique=True)
-    hostname = Required(str, unique=True)
-    role = Optional(str)
+class Host(peewee.Model):
+    ip = peewee.CharField()
+    mac = peewee.CharField()
+    hostname = peewee.CharField()
+    role = peewee.CharField()
+
+
+class Token(peewee.Model):
+    value = peewee.CharField()
+    available = peewee.BooleanField()
 
 
 class PersistenceService:
-    def __init__(self, provider='sqlite',
-                 filename='inventory.db', create_db=True):
+    def __init__(self, filename='inventory.db', create_db=True,  db=None):
 
-        db.bind(provider=provider, filename=filename, create_db=create_db)
-        db.generate_mapping(create_tables=True)
+        self.__filename = filename
 
-    @db_session
+        self.__database = peewee.SqliteDatabase(filename)
+
+        models = [Host, Token]
+        self.__database.bind(models)
+        self.__database.create_tables(models)
+
     def get_host_by_mac(self, mac: str) -> Host:
         """Returns a host by its mac address
 
@@ -31,7 +39,6 @@ class PersistenceService:
 
         return Host.get(mac=mac)
 
-    @db_session
     def create_host(self, mac: str, ip: str,
                     hostname: str, role: str = None) -> Host:
         """Creates an host
@@ -46,7 +53,22 @@ class PersistenceService:
             Host: The created host
         """
 
-        host = Host(ip=ip, mac=mac, hostname=hostname, role=role)
-        commit()
+        return Host.create(ip=ip, mac=mac, hostname=hostname, role=role)
 
-        return host
+    def create_token(self, value: str) -> Token:
+        return Token.create(value=value, available=True)
+
+    def count_tokens(self, available=True) -> Token:
+        return Token.select().where(Token.available).count()
+
+    def get_available_tokens(self):
+        return Token.select().where(Token.available)
+
+    def use_token(self, id: int):
+        token = Token.get_by_id(id)
+        token.available = False
+        token.save()
+
+    def delete_database(self):
+        for path in Path().rglob(self.__filename):
+            os.remove(path)
