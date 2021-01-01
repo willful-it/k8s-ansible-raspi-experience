@@ -71,3 +71,13 @@ ansible-playbook playbook.yml -i inventory --start-at-task="task name"
 ```
 /opt/vc/bin/vcgencmd measure_temp
 ```
+
+### yoyo migrations commands
+
+```
+yoyo new -m "Add column role to Host"
+```
+
+```
+yoyo apply
+```

@@ -1,4 +1,5 @@
 from pony.orm import Database, Required, commit, db_session
+from pony.orm.core import Optional
 
 db = Database()
 
@@ -7,11 +8,14 @@ class Host(db.Entity):
     ip = Required(str, unique=True)
     mac = Required(str, unique=True)
     hostname = Required(str, unique=True)
+    role = Optional(str)
 
 
 class PersistenceService:
-    def __init__(self):
-        db.bind(provider='sqlite', filename='inventory.db', create_db=True)
+    def __init__(self, provider='sqlite',
+                 filename='inventory.db', create_db=True):
+
+        db.bind(provider=provider, filename=filename, create_db=create_db)
         db.generate_mapping(create_tables=True)
 
     @db_session
@@ -42,7 +46,7 @@ class PersistenceService:
             Host: The created host
         """
 
-        host = Host(ip=ip, mac=mac, hostname=hostname)
+        host = Host(ip=ip, mac=mac, hostname=hostname, role=role)
         commit()
 
         return host
