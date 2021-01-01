@@ -1,8 +1,6 @@
-from pony.orm import *
+from pony.orm import Database, Required, commit, db_session
 
 db = Database()
-db.bind(provider='sqlite', filename='inventory.db', create_db=True)
-# set_sql_debug(True)
 
 
 class Host(db.Entity):
@@ -11,17 +9,40 @@ class Host(db.Entity):
     hostname = Required(str, unique=True)
 
 
-db.generate_mapping(create_tables=True)
+class PersistenceService:
+    def __init__(self):
+        db.bind(provider='sqlite', filename='inventory.db', create_db=True)
+        db.generate_mapping(create_tables=True)
 
+    @db_session
+    def get_host_by_mac(self, mac: str) -> Host:
+        """Returns a host by its mac address
 
-@db_session
-def get_host_by_mac(mac: str) -> Host:
-    return Host.get(mac=mac)
+        Args:
+            mac (str): The mac address to search for
 
+        Returns:
+            Host: The host if found, None otherwise
+        """
 
-@db_session
-def save_host(mac: str, ip: str, hostname: str) -> Host:
-    host = Host(ip=ip, mac=mac, hostname=hostname)
-    commit()
+        return Host.get(mac=mac)
 
-    return host
+    @db_session
+    def create_host(self, mac: str, ip: str,
+                    hostname: str, role: str = None) -> Host:
+        """Creates an host
+
+        Args:
+            mac (str): The host mac address
+            ip (str): The host ipv4 address
+            hostname (str): The host name
+            role (str, optional): The role of the host. Defaults to None.
+
+        Returns:
+            Host: The created host
+        """
+
+        host = Host(ip=ip, mac=mac, hostname=hostname)
+        commit()
+
+        return host

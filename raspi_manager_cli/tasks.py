@@ -6,7 +6,7 @@ from colorama import Back, Fore, Style
 from getmac import get_mac_address
 from invoke import task
 
-import persistence as db
+from persistence import PersistenceService
 
 
 def _sudo(c, cmd: str, msg: str, show_command=False) -> str:
@@ -16,7 +16,7 @@ def _sudo(c, cmd: str, msg: str, show_command=False) -> str:
 
 
 def _print_title(text: str):
-    print(Back.YELLOW + Fore.BLACK, text + ": " + Style.RESET_ALL)
+    print(Back.YELLOW + Fore.BLACK + text + Style.RESET_ALL)
 
 
 @task
@@ -24,6 +24,9 @@ def find_raspis(c):
     """
     Finds raspberry pi devices and adds them to the inventory
     """
+    db = PersistenceService()
+
+    _print_title("scanning for raspberry pi devices...")
     nmap = nmap3.NmapScanTechniques()
     map = nmap.nmap_ping_scan("192.168.1.0/24")
 
@@ -35,19 +38,20 @@ def find_raspis(c):
         hostname = map[k]['hostname'][0]['name']
         if "ubuntu" not in hostname and \
                 "raspberrypi" not in hostname and \
-                "workder" not in hostname and \
+                "worker" not in hostname and \
                 "master" not in hostname:
-            print(f"ignoring {k}|{hostname}")
+            print(f"ignoring {k} ({hostname})")
             continue
 
         mac = get_mac_address(ip=k)
         host = db.get_host_by_mac(mac)
         if host:
-            print(f"ignoring {k}|{hostname} - host already in inventory")
+            print(f"ignoring {k} ({hostname}) "
+                  "because it is already in inventory")
             continue
 
-        print(f"saving {k}|{hostname}|{mac}")
-        host = db.save_host(ip=k, mac=mac, hostname=hostname)
+        print(f"saving {k} ({hostname})")
+        host = db.create_host(ip=k, mac=mac, hostname=hostname)
 
 
 @task(help={"image-path": "The path to the original image file"})
