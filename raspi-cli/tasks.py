@@ -51,7 +51,7 @@ def find_raspis(c):
             continue
 
         print(f"saving {k} ({hostname})")
-        host = db.create_host(ip=k, mac=mac, hostname=hostname)
+        host = db.create_host(ip=k, mac=mac, hostname=hostname, role="")
 
 
 @task(help={"image-path": "The path to the original image file"})
