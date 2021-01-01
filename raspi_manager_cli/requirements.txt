@@ -6,3 +6,4 @@ colorama
 pylint
 flake8
 autopep8
+yoyo-migrations
