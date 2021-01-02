@@ -1,26 +1,4 @@
-#- name: Create Kubernetes token
-#  become: true
-#  command: kubeadm token create {{ lookup('env', 'KUBEADM_INIT_TOKEN') }}
-
-- name: Initialize Kubernetes
+- name: Kubernetes add batch of nodes
   become: true
-  command: kubeadm init --pod-network-cidr=10.244.0.0/16 --token {{ lookup('env', 'KUBEADM_INIT_TOKEN') }}
-
-- name: Creates /home/pi/.kube directory
-  file:
-    path: /home/pi/.kube
-    state: directory
-
-- name: Copy Kubernetes admin.conf to local kube config folder
-  become: true
-  command: cp /etc/kubernetes/admin.conf /home/pi/.kube/config
-
-- name: Change .kube folder permissions
-  become: true
-  file:
-    path: /home/pi/.kube/config
-    owner: pi
-    group: pi
-
-- name: Install flannel network driver
-  command: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+  command: microk8s.add-node --token {{ item }} --token-ttl -1
+  with_items: "{{ microk8s_tokens }}"
