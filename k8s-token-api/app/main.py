@@ -1,4 +1,5 @@
 import random
+from typing import List
 
 from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
@@ -32,7 +33,7 @@ def create_token(token: schemas.TokenCreate, db: Session = Depends(get_db)):
     return crud.create_token(db=db, token=token)
 
 
-@app.get("/tokens", response_model=schemas.Token)
+@app.get("/tokens", response_model=List[schemas.Token])
 def get_tokens(db: Session = Depends(get_db)):
     return crud.get_tokens(db, only_available=True)
 
