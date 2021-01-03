@@ -94,7 +94,7 @@ ansible-galaxy collection install community.general
 /opt/vc/bin/vcgencmd measure_temp
 ```
 
-### yoyo migrations commands
+## yoyo migrations commands
 
 ```
 yoyo new -m "Add column role to Host"
@@ -102,4 +102,18 @@ yoyo new -m "Add column role to Host"
 
 ```
 yoyo apply
+```
+
+## Docker commands
+
+build image
+
+```
+docker build . -t willful-k8s-token-api:latest
+```
+
+run container
+
+```
+docker run willful-k8s-token-api:latest -p 80:80
 ```
