@@ -1,4 +1,3 @@
-import random
 from typing import List
 
 from fastapi import Depends, FastAPI, HTTPException
@@ -41,11 +40,4 @@ def get_tokens(db: Session = Depends(get_db)):
 @app.put("/tokens/pop", response_model=schemas.Token)
 def pop_token(db: Session = Depends(get_db)):
 
-    tokens = crud.get_tokens(db, only_available=True)
-    token_index = random.randint(0, len(tokens) - 1)
-    token = tokens[token_index]
-
-    token.is_available = False
-    crud.update_token(db, token)
-
-    return token
+    return crud.pop_token(db)

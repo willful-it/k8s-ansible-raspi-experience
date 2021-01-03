@@ -1,3 +1,4 @@
+import random
 from typing import List
 
 from sqlalchemy.orm import Session
@@ -40,3 +41,14 @@ def update_token(db: Session, token: schemas.TokenUpdate) -> models.Token:
 
 def get_token_by_value(db: Session, value: str) -> models.Token:
     return db.query(models.Token).filter(models.Token.value == value).first()
+
+
+def pop_token(db: Session) -> models.Token:
+    tokens = get_tokens(db, only_available=True)
+    token_index = random.randint(0, len(tokens) - 1)
+    token = tokens[token_index]
+
+    token.is_available = False
+    update_token(db, token)
+
+    return token
