@@ -2,17 +2,16 @@ import random
 import string
 
 import requests
-from colorama import Back, Fore, Style
 from invoke import task
 
-
-def _print_title(text: str):
-    print(Back.YELLOW + Fore.BLACK + text + Style.RESET_ALL)
+import fmt
 
 
 @task
 def k8s_generate_tokens(c, number=20):
     """Generates random tokens"""
+
+    fmt.print_title(f"generating {number} tokens")
 
     letters = string.ascii_lowercase + string.digits
     for _ in range(number):
@@ -25,6 +24,8 @@ def k8s_generate_tokens(c, number=20):
         response = requests.post('http://127.0.0.1/tokens', json=data)
         response.raise_for_status()
 
+    fmt.print_title("done!")
+
 
 @task
 def k8s_pop_token(c):
@@ -34,7 +35,7 @@ def k8s_pop_token(c):
     response.raise_for_status()
 
     token = response.json()
-    print(token)
+    fmt.print_title("token:", str(token))
 
 
 @task
@@ -48,4 +49,4 @@ def k8s_available_tokens(c):
     for token in tokens:
         print(token['value'], token['is_available'])
 
-    _print_title(f"number of tokens available: {len(tokens)}")
+    fmt.print_title(f"number of tokens available: {len(tokens)}")
