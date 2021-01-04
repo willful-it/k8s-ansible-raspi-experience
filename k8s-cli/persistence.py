@@ -11,11 +11,6 @@ class Host(peewee.Model):
     role = peewee.CharField()
 
 
-class Token(peewee.Model):
-    value = peewee.CharField()
-    available = peewee.BooleanField()
-
-
 class PersistenceService:
     def __init__(self, filename='inventory.db', create_db=True,  db=None):
 
@@ -23,7 +18,7 @@ class PersistenceService:
 
         self.__database = peewee.SqliteDatabase(filename)
 
-        models = [Host, Token]
+        models = [Host]
         self.__database.bind(models)
         self.__database.create_tables(models)
 
@@ -54,20 +49,6 @@ class PersistenceService:
         """
 
         return Host.create(ip=ip, mac=mac, hostname=hostname, role=role)
-
-    def create_token(self, value: str) -> Token:
-        return Token.create(value=value, available=True)
-
-    def count_tokens(self, available=True) -> Token:
-        return Token.select().where(Token.available).count()
-
-    def get_available_tokens(self):
-        return Token.select().where(Token.available)
-
-    def use_token(self, id: int):
-        token = Token.get_by_id(id)
-        token.available = False
-        token.save()
 
     def delete_database(self):
         for path in Path().rglob(self.__filename):

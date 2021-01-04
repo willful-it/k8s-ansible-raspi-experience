@@ -1,5 +1,3 @@
-import random
-import string
 from crypt import METHOD_SHA512, crypt, mksalt
 from pathlib import Path
 
@@ -128,10 +126,10 @@ def prepare_image(c,
             f"cp .new-user-data {mount_path}/user-data",
             "customizing user-data")
 
-        # _sudo(
-        #     c,
-        #     "rm .new-user-data",
-        #     "remove temporary user-data file")
+        _sudo(
+            c,
+            "rm .new-user-data",
+            "remove temporary user-data file")
 
     except Exception as e:
         _sudo(c, f"losetup -d {loop_base}", "detaching devices")
@@ -144,43 +142,3 @@ def prepare_image(c,
     #
     _print_title("finishing")
     _sudo(c, f"losetup -d {loop_base}", "detaching devices")
-
-
-@task
-def k8s_generate_tokens(c, number=20):
-    """Generates random tokens"""
-
-    db = PersistenceService()
-    letters = string.ascii_lowercase + string.digits
-
-    for _ in range(number):
-        value = ''.join(random.choice(letters) for i in range(36))
-        db.create_token(value)
-
-
-@task
-def k8s_pop_token(c, minimum_pool_size=10):
-    """Returns a k8s token from the pool"""
-
-    db = PersistenceService()
-
-    tokens = db.get_available_tokens()
-    token_index = random.randint(0, len(tokens) - 1)
-    token = tokens[token_index]
-
-    db.use_token(token.id)
-
-    print(token.value)
-
-
-@task
-def k8s_available_tokens(c, minimum_pool_size=10):
-    """Shows available tokens"""
-
-    db = PersistenceService()
-
-    tokens = db.get_available_tokens()
-
-    print(f"number of tokens available: {len(tokens)}")
-    for token in tokens:
-        print(token.value)
