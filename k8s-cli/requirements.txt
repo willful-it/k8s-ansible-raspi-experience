@@ -1,0 +1,10 @@
+python3-nmap
+getmac
+invoke
+peewee
+colorama
+pylint
+flake8
+autopep8
+yoyo-migrations
+requests
